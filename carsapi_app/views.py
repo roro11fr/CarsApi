@@ -9,12 +9,15 @@ from .serializers import (
     OwnerSerializer, CarSerializer,
     InsurancePolicySerializer, ClaimSerializer, PolicyExpiryLogSerializer,
 )
-from . import actions  # <- acțiunile separate
+from . import actions
+import structlog
+logger = structlog.get_logger()
 
 
 # ------------ HEALTH ------------
 @api_view(["GET"])
 def health_check(_request):
+    logger.info("health_check", now=timezone.now().isoformat())
     return Response({"status": "ok", "time": timezone.now().isoformat()})
 
 

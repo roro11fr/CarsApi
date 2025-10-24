@@ -1,17 +1,30 @@
-# carsapi/logging_setup.py
+# app/logging_config.py
 import logging
-import os
 import structlog
+import os
+import sys
 
 def setup_logging():
     is_dev = os.getenv("DEBUG", "false").lower() == "true"
-    processors = [structlog.processors.TimeStamper(fmt="iso")]
-    processors += [structlog.dev.ConsoleRenderer()] if is_dev else [structlog.processors.JSONRenderer()]
 
-    structlog.configure(
-        processors=processors,
-        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-        context_class=dict,
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=logging.DEBUG if is_dev else logging.INFO,
     )
 
-setup_logging()
+    structlog.configure(
+        processors=[
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.dev.ConsoleRenderer() if is_dev else structlog.processors.JSONRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
