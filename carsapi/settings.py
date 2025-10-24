@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os, environ
+from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -138,7 +141,6 @@ REST_FRAMEWORK = {
 
 }
 
-import environ, os
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
@@ -151,4 +153,20 @@ DATABASES = {
         "HOST": env("POSTGRES_HOST"),
         "PORT": env("POSTGRES_PORT"),
     }
+}
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/1")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_DEFAULT_QUEUE = "default"
+
+_beat_mins = int(os.getenv("CELERY_BEAT_SCHEDULE_MINUTES", "10"))
+CELERY_BEAT_SCHEDULE = {
+    "policy-expiry-scan-00-01-every-10min": {
+        "task": "app.tasks.policy_expiry_scan",
+        # minutele 0,10,20,30,40,50 în H=0 (adică 00:xx)
+        "schedule": crontab(minute="0,10,20,30,40,50", hour=0),
+        "options": {"queue": "default"},
+    },
 }

@@ -12,6 +12,9 @@ class CarSerializer(serializers.ModelSerializer):
     owner_id = serializers.PrimaryKeyRelatedField(
         source="owner", queryset=Owner.objects.all(), write_only=True
     )
+    year_of_manufacture = serializers.IntegerField(
+        min_value=1886, max_value=2100, required=False, allow_null=True
+    )
 
     class Meta:
         model = Car
