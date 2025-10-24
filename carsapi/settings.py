@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "carsapi_app.middleware.request_id.RequestIDMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -170,3 +171,5 @@ CELERY_BEAT_SCHEDULE = {
         "options": {"queue": "default"},
     },
 }
+from carsapi.logging_setup import setup_logging
+setup_logging()

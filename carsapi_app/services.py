@@ -9,7 +9,9 @@ from django.utils import timezone
 
 from .models import Car, InsurancePolicy, Claim, PolicyExpiryLog
 from .serializers import InsurancePolicySerializer, ClaimSerializer
+import structlog
 
+logger = structlog.get_logger()
 
 # ---------- VALIDITY ----------
 def is_insured_on_date(car: Car, target: date) -> bool:
@@ -36,7 +38,9 @@ def create_policy_for_car(
     }
     ser = InsurancePolicySerializer(data=payload)
     ser.is_valid(raise_exception=True)
-    return ser.save()
+    obj = ser.save()
+    logger.info("policy_created_service", policy_id=obj.id, car_id=car.id, start_date=str(obj.start_date), end_date=str(obj.end_date), provider=obj.provider or None)
+    return obj
 
 
 # ---------- CLAIMS ----------
